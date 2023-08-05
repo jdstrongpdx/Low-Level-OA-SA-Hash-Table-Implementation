@@ -134,9 +134,11 @@ class HashMap:
     def resize_table(self, new_capacity: int) -> None:
         """TODO"""
         # determine and save new capacity
-        if new_capacity >= 1:
-            if not self._is_prime(new_capacity):
-                new_capacity = self._next_prime(new_capacity)
+        if new_capacity < 1:
+            return
+
+        if not self._is_prime(new_capacity):
+            new_capacity = self._next_prime(new_capacity)
         old_capacity = self._capacity
         self._capacity = new_capacity
 
@@ -162,8 +164,8 @@ class HashMap:
             return None
         if not self._buckets[hash].length():
             return
-        result = self._buckets[hash].contains(key).value
-        return result if result else None
+        result = self._buckets[hash].contains(key)
+        return result.value if result else None
 
     def contains_key(self, key: str) -> bool:
         """TODO"""
@@ -178,8 +180,8 @@ class HashMap:
         hash = self._hash_function(key) % self._capacity
         if not self._buckets[hash].length():
             return
-        self._buckets[hash].remove(key)
-        self._size -= 1
+        if self._buckets[hash].remove(key):
+            self._size -= 1
 
     def get_keys_and_values(self) -> DynamicArray:
         """TODO"""
