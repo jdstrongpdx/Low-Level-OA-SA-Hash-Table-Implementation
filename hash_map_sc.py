@@ -158,10 +158,12 @@ class HashMap:
     def get(self, key: str) -> object:
         """TODO"""
         hash = self._hash_function(key) % self._capacity
+        if hash < 0 or hash > self._capacity - 1:
+            return None
         if not self._buckets[hash].length():
             return
         result = self._buckets[hash].contains(key).value
-        return True if result else False
+        return result if result else None
 
     def contains_key(self, key: str) -> bool:
         """TODO"""
@@ -323,6 +325,13 @@ if __name__ == "__main__":
     m = HashMap(31, hash_function_1)
     print(m.get('key'))
     m.put('key1', 10)
+    print(m.get('key1'))
+
+    print("\nPDF - get out of bounds")
+    print("-------------------")
+    m = HashMap(31, hash_function_1)
+    print(m.get('key'))
+    m.put('key1', 123456)
     print(m.get('key1'))
 
     print("\nPDF - get example 2")
