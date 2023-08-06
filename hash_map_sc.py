@@ -136,7 +136,8 @@ class HashMap:
         # determine and save new capacity
         if new_capacity < 1:
             return
-
+        if new_capacity < self._capacity:
+            new_capacity = self._capacity
         if not self._is_prime(new_capacity):
             new_capacity = self._next_prime(new_capacity)
         old_capacity = self._capacity
@@ -191,7 +192,7 @@ class HashMap:
             return da
         for index in range(self._capacity):
             bucket = self._buckets[index]
-            if bucket.length:
+            if bucket.length():
                 for node in bucket:
                     da.append((node.key, node.value))
         return da
@@ -298,6 +299,11 @@ if __name__ == "__main__":
     m.put('key1', 10)
     print(m.get_size(), m.get_capacity(), m.get('key1'), m.contains_key('key1'))
     m.resize_table(30)
+    print(m.get_size(), m.get_capacity(), m.get('key1'), m.contains_key('key1'))
+    print('--- additional tests ---')
+    m.resize_table(0)
+    print(m.get_size(), m.get_capacity(), m.get('key1'), m.contains_key('key1'))
+    m.resize_table(1)
     print(m.get_size(), m.get_capacity(), m.get('key1'), m.contains_key('key1'))
 
     print("\nPDF - resize example 2")
