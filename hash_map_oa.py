@@ -126,8 +126,10 @@ class HashMap:
     def resize_table(self, new_capacity: int) -> None:
         """TODO"""
         # check and get correct next capacity
-        if new_capacity < self._capacity:
+        if new_capacity < self._size:
             return
+        if new_capacity < self._capacity:
+            new_capacity = int((self._size / 0.66) * 2)
         if not self._is_prime(new_capacity):
             new_capacity = self._next_prime(new_capacity)
 
@@ -197,7 +199,8 @@ class HashMap:
         for index in range(self._capacity):
             bucket = self._buckets[index]
             if bucket:
-                da.append((bucket.key, bucket.value))
+                if not bucket.is_tombstone:
+                    da.append((bucket.key, bucket.value))
         return da
 
     def __iter__(self):
