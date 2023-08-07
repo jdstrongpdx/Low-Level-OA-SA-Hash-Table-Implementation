@@ -135,10 +135,8 @@ class HashMap:
         old = self._buckets
         old_size = self._size
         old_capacity = self._capacity
-        self.clear()
         self._capacity = new_capacity
-        for _ in range(self._capacity):
-            self._buckets.append(None)
+        self.clear()
 
         # rehash all values from the old array into the new array
         for index in range(old_capacity):
