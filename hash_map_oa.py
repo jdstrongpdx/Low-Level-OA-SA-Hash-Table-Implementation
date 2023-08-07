@@ -95,9 +95,9 @@ class HashMap:
     def add_key(self, hash_entry: HashEntry):
         flag = False
         counter = 0
-        hash = self._hash_function(hash_entry.key) % self._capacity
+        hash = self._hash_function(hash_entry.key)
         while not flag:
-            index = hash + (counter ** 2)
+            index = (hash + (counter ** 2)) % self._capacity
             if index > self._capacity - 1:
                 index = index // self._capacity
             bucket = self._buckets[index]
@@ -170,9 +170,9 @@ class HashMap:
     def find_key(self, key):
         """TODO"""
         counter = 0
-        hash = self._hash_function(key) % self._capacity
+        hash = self._hash_function(key)
         while counter != self._capacity - 2:
-            index = hash + (counter ** 2)
+            index = (hash + (counter ** 2)) % self._capacity
             if index > self._capacity - 1:
                 index = index // self._capacity
             bucket = self._buckets[index]
