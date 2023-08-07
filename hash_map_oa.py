@@ -92,39 +92,23 @@ class HashMap:
             self.resize_table(self._capacity * 2)
         self.add_key(HashEntry(key, value))
 
-
     def add_key(self, hash_entry: HashEntry):
+        flag = False
+        counter = 1
         hash = self._hash_function(hash_entry.key) % self._capacity
-        index = hash
-        bucket = self._buckets[index]
-        end = self._capacity - 1
-        if not bucket:
-            self._buckets[index] = hash_entry
-            self._size += 1
-            return
-        if bucket.key == hash_entry.key and not bucket.is_tombstone:
-            bucket.value = hash_entry.value
-            return
-
-        if index == end:
-            index = 0
-        else:
-            index += 1
-
-        while index != hash:
+        while not flag:
+            index = hash + (counter ** 2)
+            if index > self._capacity - 1:
+                index = index // self._capacity
             bucket = self._buckets[index]
             if not bucket:
                 self._buckets[index] = hash_entry
                 self._size += 1
-                return
-            if bucket.key == hash_entry.key and not bucket.is_tombstone:
+                flag = True
+            elif bucket.key == hash_entry.key and not bucket.is_tombstone:
                 bucket.value = hash_entry.value
-                return
-
-            if index == end:
-                index = 0
-            else:
-                index += 1
+                flag = True
+            counter += 1
 
     def table_load(self) -> float:
         """TODO"""
@@ -187,28 +171,18 @@ class HashMap:
 
     def find_key(self, key):
         """TODO"""
+        counter = 1
         hash = self._hash_function(key) % self._capacity
-        index = hash
-        bucket = self._buckets[hash]
-        end = self._capacity - 1
-        if bucket:
-            if bucket.key == key and not bucket.is_tombstone:
-                return bucket
-
-        if index == end:
-            index = 0
-        else:
-            index += 1
-
-        while index != hash:
+        while counter != self._capacity - 2:
+            index = hash + (counter ** 2)
+            if index > self._capacity - 1:
+                index = index // self._capacity
             bucket = self._buckets[index]
             if bucket:
                 if bucket.key == key and not bucket.is_tombstone:
                     return bucket
-            if index == end:
-                index = 0
-            else:
-                index += 1
+            counter += 1
+        return
 
     def clear(self) -> None:
         """Clear all data from the hash table"""
