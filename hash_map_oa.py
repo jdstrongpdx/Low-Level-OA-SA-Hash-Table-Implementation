@@ -86,13 +86,15 @@ class HashMap:
     # ------------------------------------------------------------------ #
 
     def put(self, key: str, value: object) -> None:
-        """TODO"""
+        """Add a key/value pair to the hast map, doubling the capacity if the load factor is >= 0.5"""
         load_factor = self.table_load()
         if load_factor >= 0.5:
             self.resize_table(self._capacity * 2)
         self.add_key(HashEntry(key, value))
 
-    def add_key(self, hash_entry: HashEntry):
+    def add_key(self, hash_entry: HashEntry) -> None:
+        """Add a hash_entry object into the hash map using open addressing with quadratic probing for collision
+            resolution. If hash_entry.key is found, update the value."""
         flag = False
         counter = 0
         hash = self._hash_function(hash_entry.key)
@@ -105,17 +107,24 @@ class HashMap:
                 self._buckets[index] = hash_entry
                 self._size += 1
                 flag = True
-            elif bucket.key == hash_entry.key and not bucket.is_tombstone:
+            elif bucket.key == hash_entry.key:
                 bucket.value = hash_entry.value
+                if bucket.is_tombstone:
+                    self._buckets[index].is_tombstone = False
+                    self._size += 1
+                flag = True
+            elif bucket and bucket.is_tombstone:
+                self._buckets[index] = hash_entry
+                self._size += 1
                 flag = True
             counter += 1
 
     def table_load(self) -> float:
-        """TODO"""
+        """Return the float value of size / capacity for the hash table"""
         return self._size / self._capacity
 
     def empty_buckets(self) -> int:
-        """TODO"""
+        """Return the number of empty buckets in the hash table DynamicArray.  O(N) time complexity"""
         count = 0
         for index in range(self._capacity):
             bucket = self._buckets[index]
@@ -124,7 +133,8 @@ class HashMap:
         return count
 
     def resize_table(self, new_capacity: int) -> None:
-        """TODO"""
+        """If parameter new_capacity is less than current size - do nothing.  Check if new_capacity is a prime number -
+            if not increment to the next prime number. O(N) time complexity. TODO"""
         # check and get correct next capacity
         if new_capacity < self._size:
             return
@@ -151,13 +161,13 @@ class HashMap:
             raise DynamicArrayException("Old Array values not transferred correctly")
 
     def get(self, key: str) -> object:
-        """TODO"""
+        """Return the value of parameter key if found, else None."""
         bucket = self.find_key(key)
         if bucket:
             return bucket.value
 
     def contains_key(self, key: str) -> bool:
-        """TODO"""
+        """Return True if the hash map contains the parameter key, else False"""
         bucket = self.find_key(key)
         return True if bucket else False
 
@@ -169,8 +179,9 @@ class HashMap:
             bucket.is_tombstone = True
             self._size -= 1
 
-    def find_key(self, key):
-        """TODO"""
+    def find_key(self, key) -> object:
+        """Return a hash_entry object if the parameter key is found in the hash map, else return None.
+            Helper method used by get, contains_key, and remove methods."""
         counter = 0
         hash = self._hash_function(key)
         while counter != self._capacity - 2:

@@ -89,7 +89,8 @@ class HashMap:
     # ------------------------------------------------------------------ #
 
     def put(self, key: str, value: object) -> None:
-        """TODO - time complexity?"""
+        """Add parameter key/value pair to the hash map using chaining for collision resolution.  If key exists in the
+            hash table, update the value for the key.  Double the hash map capacity if the load factor is >= 1."""
         # resize the DynamicArray if the table load is >= 1
         if self.table_load() >= 1:
             self.resize_table(self._capacity * 2)
@@ -103,8 +104,8 @@ class HashMap:
             bucket.insert(key, value)
             self._size += 1
             return
-        # remove any key/value pair from the LinkedList if the key is present -
-        # remove only because if contains then remove would be worst case O(2N) vs O(N) for just remove
+        # remove any key/value pair from the LinkedList if the key is present:
+        # uses remove because if contains then remove would be worst case O(2N) vs O(N) for just remove
         success = bucket.remove(key)
         if success:
             self._size -= 1
@@ -121,7 +122,7 @@ class HashMap:
         return count
 
     def table_load(self) -> float:
-        """Return the size / capacity value for the hash table"""
+        """Return the float value of size / capacity for the hash table.  O(1) time complexity"""
         return self._size / self._capacity
 
     def clear(self) -> None:
@@ -132,12 +133,14 @@ class HashMap:
         self._size = 0
 
     def resize_table(self, new_capacity: int) -> None:
-        """TODO"""
+        """If parameter new_capacity is less than 1 - do nothing.  Check if new_capacity is a prime number - if not
+            increment to the next prime number. O(N) time complexity. TODO"""
         # determine and save new capacity
         if new_capacity < 1:
             return
-        if new_capacity < self._capacity:
-            new_capacity = self._size
+        new_load_factor = self._size / new_capacity
+        if new_load_factor > 1:
+            new_capacity = self._size + 1
         if not self._is_prime(new_capacity):
             new_capacity = self._next_prime(new_capacity)
         old_capacity = self._capacity
@@ -153,39 +156,45 @@ class HashMap:
             if old[index].length():
                 ll = old[index]
                 for node in ll:
-                    node_key = node.key
-                    new_hash = self._hash_function(node_key) % self._capacity
-                    self._buckets[new_hash].insert(node.key, node.value)
-                    self._size += 1
+                    self.put(node.key, node.value)
 
     def get(self, key: str) -> object:
-        """TODO"""
-        hash = self._hash_function(key) % self._capacity
-        if hash < 0 or hash > self._capacity - 1:
-            return None
-        if not self._buckets[hash].length():
-            return
-        result = self._buckets[hash].contains(key)
-        return result.value if result else None
+        """Return the value of parameter key if found, else None."""
+        bucket = self.get_bucket(key)
+        if bucket:
+            result = bucket.contains(key)
+            return result.value if result else None
+        return None
 
     def contains_key(self, key: str) -> bool:
-        """TODO"""
-        hash = self._hash_function(key) % self._capacity
-        if not self._buckets[hash].length():
-            return False
-        result = self._buckets[hash].contains(key)
-        return True if result else False
+        """Return True if the hash map contains the parameter key, else False"""
+        bucket = self.get_bucket(key)
+        if bucket:
+            result = bucket.contains(key)
+            return True if result else False
+        return False
 
     def remove(self, key: str) -> None:
-        """TODO"""
+        """Remove a key/value pair from the hash map if the parameter key is found, else do nothing."""
+        bucket = self.get_bucket(key)
+        if bucket:
+            result = bucket.remove(key)
+            if result:
+                self._size -= 1
+
+    def get_bucket(self, key) -> object:
+        """Return the LinkedList object for the parameter key if found, else return None"""
         hash = self._hash_function(key) % self._capacity
+        # if the hash is smaller or greater than the array size
+        if hash < 0 or hash > self._capacity - 1:
+            return
+        # if the hash bucket is empty
         if not self._buckets[hash].length():
             return
-        if self._buckets[hash].remove(key):
-            self._size -= 1
+        return self._buckets[hash]
 
     def get_keys_and_values(self) -> DynamicArray:
-        """TODO"""
+        """Return a DynamicArray of all key/value pairs in the hash map"""
         da = DynamicArray()
 
         if self._size == 0:
@@ -197,16 +206,30 @@ class HashMap:
                     da.append((node.key, node.value))
         return da
 
-def find_mode(da: DynamicArray) -> tuple[DynamicArray, int]:
-    """
-    TODO: Write this implementation
-    """
-    # if you'd like to use a hash map,
-    # use this instance of your Separate Chaining HashMap
-    map = HashMap()
-    da = DynamicArray()
-    return da, 0
 
+def find_mode(da: DynamicArray) -> tuple[DynamicArray, int]:
+    """Return a new DynamicArray and count of the highest occurring items in the parameter DynamicArray.
+        O(N) time complexity"""
+    map = HashMap()
+    da_return = DynamicArray()
+    max_val = 0
+    for index in range(da.length()):
+        # For each 'key' in parameter DynamicArray, increment value if it exists or add 'key' with value of 1 if not
+        item = da[index]
+        value = map.get(item)
+        if not value:
+            value = 1
+        else:
+            value += 1
+        # if the value is greater than the max_val, clear the return array and add keys with same max_val
+        if value > max_val:
+            da_return = DynamicArray()
+            da_return.append(item)
+            max_val = value
+        elif value == max_val:
+            da_return.append(item)
+        map.put(item, value)
+    return da_return, max_val
 
 
 # ------------------- BASIC TESTING ---------------------------------------- #
