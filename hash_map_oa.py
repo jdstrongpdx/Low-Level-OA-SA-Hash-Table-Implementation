@@ -135,13 +135,16 @@ class HashMap:
     def resize_table(self, new_capacity: int) -> None:
         """If parameter new_capacity is less than current size - do nothing.  Check if new_capacity is a prime number -
             if not increment to the next prime number. O(N) time complexity. TODO"""
-        # check and get correct next capacity
-        if new_capacity < self._size:
-            return
-        if new_capacity < self._capacity:
-            new_capacity = int((self._size / 0.66) * 2)
-        if not self._is_prime(new_capacity):
+
+        # check/make new_capacity a prime number
+        result = self._is_prime(new_capacity)
+        if not result:
             new_capacity = self._next_prime(new_capacity)
+        # check load factor is maintained during resize
+        new_load_factor = self._size / new_capacity
+        while new_load_factor >= 0.5:
+            new_capacity = self._next_prime(new_capacity + 1)
+            new_load_factor = self._size / new_capacity
 
         # save and clear current array and build new one
         old = self._buckets
@@ -157,6 +160,7 @@ class HashMap:
                 if not old_bucket.is_tombstone:
                     self.add_key(old_bucket)
 
+        # check all values transferred properly
         if old_size != self._size:
             raise DynamicArrayException("Old Array values not transferred correctly")
 
