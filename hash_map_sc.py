@@ -137,6 +137,8 @@ class HashMap:
             increment to the next prime number. O(N) time complexity. TODO"""
         if new_capacity < 1:
             return
+        if new_capacity < self._size:
+            new_capacity = self._size
 
         # check/make new_capacity a prime number
         result = self._is_prime(new_capacity)
