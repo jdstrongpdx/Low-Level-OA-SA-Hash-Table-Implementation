@@ -104,8 +104,9 @@ class HashMap:
             bucket.insert(key, value)
             self._size += 1
             return
+
         # remove any key/value pair from the LinkedList if the key is present:
-        # uses remove because if contains then remove would be worst case O(2N) vs O(N) for just remove
+        # uses remove because if contains: then remove would be worst case O(2N) vs O(N) for just remove
         success = bucket.remove(key)
         if success:
             self._size -= 1
@@ -135,34 +136,30 @@ class HashMap:
     def resize_table(self, new_capacity: int) -> None:
         """If parameter new_capacity is less than 1 - do nothing.  Check if new_capacity is a prime number - if not
             increment to the next prime number. O(N) time complexity. TODO"""
+        # if new_capacity is not less than 1, do nothing
         if new_capacity < 1:
             return
-        if new_capacity < self._size:
-            new_capacity = self._size
 
         # check/make new_capacity a prime number
-        result = self._is_prime(new_capacity)
-        if not result:
+        if not self._is_prime(new_capacity):
             new_capacity = self._next_prime(new_capacity)
-        # check load factor is maintained during resize
-        new_load_factor = self._size / new_capacity
-        while new_load_factor >= 1:
-            new_capacity = self._next_prime(new_capacity + 1)
-            new_load_factor = self._size / new_capacity
 
-        # store the old array and clear self
-        old_capacity = self._capacity
+        # check that the load factor minimums are maintained
+        if new_capacity < self._capacity:
+            new_capacity = int((self._size / 0.7))
+        if not self._is_prime(new_capacity):
+            new_capacity = self._next_prime(new_capacity)
+
+        # save current array and build a new one
+        old = self.get_keys_and_values()
         self._capacity = new_capacity
         old_size = self._size
-        old = self._buckets
         self.clear()
 
-        # re-hash and store nodes from old array into the new array
-        for index in range(old_capacity):
-            if old[index].length():
-                ll = old[index]
-                for node in ll:
-                    self.put(node.key, node.value)
+        # rehash all values from the old array into the new array
+        for index in range(old_size):
+            old_bucket = old[index]
+            self.put(old_bucket[0], old_bucket[1])
 
         # check all values transferred properly
         if old_size != self._size:

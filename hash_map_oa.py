@@ -99,20 +99,24 @@ class HashMap:
         counter = 0
         hash = self._hash_function(hash_entry.key)
         while not flag:
+            # get hashed index
             index = (hash + (counter ** 2)) % self._capacity
             if index > self._capacity - 1:
                 index = index // self._capacity
             bucket = self._buckets[index]
+            # if the bucket is empty, add value
             if not bucket:
                 self._buckets[index] = hash_entry
                 self._size += 1
                 flag = True
+            # if the bucket matches the parameter key, update with parameter value
             elif bucket.key == hash_entry.key:
                 bucket.value = hash_entry.value
                 if bucket.is_tombstone:
                     self._buckets[index].is_tombstone = False
                     self._size += 1
                 flag = True
+            # if the bucket is tombstone, replace HashEntry
             elif bucket and bucket.is_tombstone:
                 self._buckets[index] = hash_entry
                 self._size += 1
@@ -137,25 +141,22 @@ class HashMap:
             if not increment to the next prime number. O(N) time complexity. TODO"""
         # check and get correct next capacity
         if new_capacity < self._size:
-            new_capacity = self._size
+            return
         if new_capacity < self._capacity:
             new_capacity = int((self._size / 0.66) * 2)
         if not self._is_prime(new_capacity):
             new_capacity = self._next_prime(new_capacity)
 
-        # save and clear current array and build new one
-        old = self._buckets
+        # save current array and build a new one
+        old = self.get_keys_and_values()
         old_size = self._size
-        old_capacity = self._capacity
         self._capacity = new_capacity
         self.clear()
 
         # rehash all values from the old array into the new array
-        for index in range(old_capacity):
+        for index in range(old_size):
             old_bucket = old[index]
-            if old_bucket:
-                if not old_bucket.is_tombstone:
-                    self.add_key(old_bucket)
+            self.add_key(HashEntry(old_bucket[0], old_bucket[1]))
 
         # check all values transferred properly
         if old_size != self._size:
