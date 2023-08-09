@@ -91,9 +91,6 @@ class HashMap:
     def put(self, key: str, value: object) -> None:
         """Add parameter key/value pair to the hash map using chaining for collision resolution.  If key exists in the
             hash table, update the value for the key.  Double the hash map capacity if the load factor is >= 1."""
-        # resize the DynamicArray if the table load is >= 1
-        if self.table_load() >= 1:
-            self.resize_table(self._capacity * 2)
 
         # find hash and index for the key in the array
         hash = self._hash_function(key) % self._capacity
@@ -105,14 +102,18 @@ class HashMap:
             self._size += 1
             return
 
-        # remove any key/value pair from the LinkedList if the key is present:
-        # uses remove because if contains: then remove would be worst case O(2N) vs O(N) for just remove
-        success = bucket.remove(key)
-        if success:
-            self._size -= 1
-        # add the key/value pair to the LinkedList
-        bucket.insert(key, value)
+        trav = None
+        for node in bucket:
+            if node.key == key:
+                node.value = value
+                return
+            trav = node
+        trav.next = SLNode(key, value)
         self._size += 1
+
+        # resize the DynamicArray if the table load is >= 1
+        if self.table_load() >= 1:
+            self.resize_table(self._capacity * 2)
 
     def empty_buckets(self) -> int:
         """Return the number of empty buckets in the hash table DynamicArray.  O(N) time complexity"""
@@ -136,6 +137,7 @@ class HashMap:
     def resize_table(self, new_capacity: int) -> None:
         """If parameter new_capacity is less than 1 - do nothing.  Check if new_capacity is a prime number - if not
             increment to the next prime number. O(N) time complexity. TODO"""
+
         # if new_capacity is not less than 1, do nothing
         if new_capacity < 1:
             return
@@ -145,10 +147,11 @@ class HashMap:
             new_capacity = self._next_prime(new_capacity)
 
         # check that the load factor minimums are maintained
-        if new_capacity < self._capacity:
-            new_capacity = int((self._size / 0.7))
-        if not self._is_prime(new_capacity):
-            new_capacity = self._next_prime(new_capacity)
+        new_load_factor = self._size / new_capacity
+        if new_load_factor > 1:
+            while new_load_factor >= 0.73:
+                new_capacity = self._next_prime(new_capacity + 1)
+                new_load_factor = self._size / new_capacity
 
         # save current array and build a new one
         old = self.get_keys_and_values()
@@ -157,7 +160,7 @@ class HashMap:
         self.clear()
 
         # rehash all values from the old array into the new array
-        for index in range(old_size):
+        for index in range(old.length()):
             old_bucket = old[index]
             self.put(old_bucket[0], old_bucket[1])
 
@@ -167,25 +170,25 @@ class HashMap:
 
     def get(self, key: str) -> object:
         """Return the value of parameter key if found, else None."""
-        bucket = self.get_bucket(key)
-        if bucket:
-            result = bucket.contains(key)
+        linked_list = self.get_bucket(key)
+        if linked_list:
+            result = linked_list.contains(key)
             return result.value if result else None
         return None
 
     def contains_key(self, key: str) -> bool:
         """Return True if the hash map contains the parameter key, else False"""
-        bucket = self.get_bucket(key)
-        if bucket:
-            result = bucket.contains(key)
+        linked_list = self.get_bucket(key)
+        if linked_list:
+            result = linked_list.contains(key)
             return True if result else False
         return False
 
     def remove(self, key: str) -> None:
         """Remove a key/value pair from the hash map if the parameter key is found, else do nothing."""
-        bucket = self.get_bucket(key)
-        if bucket:
-            result = bucket.remove(key)
+        linked_list = self.get_bucket(key)
+        if linked_list:
+            result = linked_list.remove(key)
             if result:
                 self._size -= 1
 
@@ -196,19 +199,18 @@ class HashMap:
         if hash < 0 or hash > self._capacity - 1:
             return
         # if the hash bucket is empty
-        if not self._buckets[hash].length():
+        if not self._buckets[hash]:
             return
         return self._buckets[hash]
 
     def get_keys_and_values(self) -> DynamicArray:
         """Return a DynamicArray of all key/value pairs in the hash map"""
         da = DynamicArray()
-
         if self._size == 0:
             return da
         for index in range(self._capacity):
             bucket = self._buckets[index]
-            if bucket.length():
+            if bucket:
                 for node in bucket:
                     da.append((node.key, node.value))
         return da

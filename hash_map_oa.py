@@ -154,7 +154,7 @@ class HashMap:
         self.clear()
 
         # rehash all values from the old array into the new array
-        for index in range(old_size):
+        for index in range(old.length()):
             old_bucket = old[index]
             self.add_key(HashEntry(old_bucket[0], old_bucket[1]))
 
