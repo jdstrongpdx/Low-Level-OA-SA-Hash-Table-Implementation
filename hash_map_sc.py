@@ -91,6 +91,9 @@ class HashMap:
     def put(self, key: str, value: object) -> None:
         """Add parameter key/value pair to the hash map using chaining for collision resolution.  If key exists in the
             hash table, update the value for the key.  Double the hash map capacity if the load factor is >= 1."""
+        # resize the DynamicArray if the table load is >= 1
+        if self.table_load() >= 1:
+            self.resize_table(self._capacity * 2)
 
         # find hash and index for the key in the array
         hash = self._hash_function(key) % self._capacity
@@ -111,9 +114,7 @@ class HashMap:
         trav.next = SLNode(key, value)
         self._size += 1
 
-        # resize the DynamicArray if the table load is >= 1
-        if self.table_load() >= 1:
-            self.resize_table(self._capacity * 2)
+
 
     def empty_buckets(self) -> int:
         """Return the number of empty buckets in the hash table DynamicArray.  O(N) time complexity"""
@@ -140,6 +141,9 @@ class HashMap:
         # if new_capacity is not less than 1, do nothing
         if new_capacity < 1:
             return
+
+        if new_capacity < self._size:
+            new_capacity = self._size
 
         # check/make new_capacity a prime number
         if not self._is_prime(new_capacity):
