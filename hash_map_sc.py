@@ -3,7 +3,10 @@
 # Course: CS261 - Data Structures
 # Assignment: 6
 # Due Date: 8/15/2023
-# Description:  TODO
+# Description:  Creation of a hash map using singly chained collision resolution.  Includes common methods for
+#               add (put), get, contains_key, remove, clear, export (get_keys_and_values) as well as methods for
+#               internal functioning (table_load, resize_table, empty_buckets).  Includes a out of class function
+#               for find_mode.
 
 
 from a6_include import (DynamicArray, LinkedList, SLNode, LinkedListIterator, DynamicArrayException,
@@ -99,18 +102,20 @@ class HashMap:
         hash = self._hash_function(key) % self._capacity
         bucket = self._buckets[hash]
 
-        # if index is empty, add node to LinkedList
+        # if index is empty, add node to LinkedList - O(1) time complexity
         if not bucket.length():
             bucket.insert(key, value)
             self._size += 1
             return
 
-        # remove any key/value pair from the LinkedList if the key is present:
-        # uses remove because if contains: then remove would be worst case O(2N) vs O(N) for just remove
-        success = bucket.remove(key)
-        if success:
-            self._size -= 1
-        # add the key/value pair to the LinkedList
+        # if not empty, search the LinkedList for the parameter key and replace the value if found
+        # worst case O(LinkedList.length())
+        for node in bucket:
+            if node.key == key:
+                node.value = value
+                return
+
+        # if the key was not found, insert the key/value pair - O(1) time complexity
         bucket.insert(key, value)
         self._size += 1
 
@@ -215,7 +220,7 @@ def find_mode(da: DynamicArray) -> tuple[DynamicArray, int]:
     da_return = DynamicArray()
     max_val = 0
     for index in range(da.length()):
-        # For each 'key' in parameter DynamicArray, increment value if it exists or add 'key' with value of 1 if not
+        # For each 'key' in parameter DynamicArray, increment value if it exists else add 'key' with value of 1 if not
         item = da[index]
         value = map.get(item)
         if not value:
@@ -323,11 +328,6 @@ if __name__ == "__main__":
     m.put('key1', 10)
     print(m.get_size(), m.get_capacity(), m.get('key1'), m.contains_key('key1'))
     m.resize_table(30)
-    print(m.get_size(), m.get_capacity(), m.get('key1'), m.contains_key('key1'))
-    print('--- additional tests ---')
-    m.resize_table(0)
-    print(m.get_size(), m.get_capacity(), m.get('key1'), m.contains_key('key1'))
-    m.resize_table(1)
     print(m.get_size(), m.get_capacity(), m.get('key1'), m.contains_key('key1'))
 
     print("\nPDF - resize example 2")

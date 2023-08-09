@@ -3,7 +3,9 @@
 # Course: CS261 - Data Structures
 # Assignment: 6
 # Due Date: 8/15/2023
-# Description:  TODO
+# Description:  Creation of a hash map using open addressing collision resolution.  Includes common methods for
+#                add (put), get, contains_key, remove, clear, export (get_keys_and_values) as well as methods for
+#                internal functioning (table_load, resize_table, empty_buckets).  Includes a in class iterator of self.
 
 from a6_include import (DynamicArray, DynamicArrayException, HashEntry,
                         hash_function_1, hash_function_2)
@@ -87,9 +89,13 @@ class HashMap:
 
     def put(self, key: str, value: object) -> None:
         """Add a key/value pair to the hast map, doubling the capacity if the load factor is >= 0.5"""
+        # double the size of the array if the load factor >= 0.5.  Indirect recursion of put -> resize -> put
         load_factor = self.table_load()
         if load_factor >= 0.5:
             self.resize_table(self._capacity * 2)
+
+        # use quadratic probing to scan keys and buckets.  If the parameter key is found, update the value, else add
+        # HashEntry with parameter key/value to the first 'empty' bucket.
         flag = False
         counter = 0
         hash = self._hash_function(key)
@@ -120,7 +126,7 @@ class HashMap:
             counter += 1
 
     def table_load(self) -> float:
-        """Return the float value of size / capacity for the hash table"""
+        """Return the float value of size / capacity for the hash table. O(1) time complexity"""
         return self._size / self._capacity
 
     def empty_buckets(self) -> int:
@@ -134,11 +140,12 @@ class HashMap:
 
     def resize_table(self, new_capacity: int) -> None:
         """If parameter new_capacity is less than current size - do nothing.  Check if new_capacity is a prime number -
-            if not increment to the next prime number. O(N) time complexity. TODO"""
+            if not increment to the next prime number. O(N) time complexity."""
         # check and get correct next capacity
         if new_capacity < self._size:
             return
 
+        # check/make new_capacity a prime number
         if not self._is_prime(new_capacity):
             new_capacity = self._next_prime(new_capacity)
 
@@ -158,7 +165,7 @@ class HashMap:
 
         # check all values transferred properly
         if old_size != self._size:
-            raise DynamicArrayException("Old Array values not transferred correctly")
+            raise DynamicArrayException("Resize_table values not transferred correctly")
 
     def get(self, key: str) -> object:
         """Return the value of parameter key if found, else None."""
@@ -181,7 +188,7 @@ class HashMap:
 
     def find_key(self, key) -> object:
         """Return a hash_entry object if the parameter key is found in the hash map, else return None.
-            Helper method used by get, contains_key, and remove methods."""
+            Helper method used by get, contains_key, and remove methods. O(1) best case time complexity"""
         counter = 0
         hash = self._hash_function(key)
         # search from the current hash index until the next empty space
@@ -198,14 +205,14 @@ class HashMap:
         return
 
     def clear(self) -> None:
-        """Clear all data from the hash table"""
+        """Clear all data from the hash table. O(N) time complexity to build 'empty' array"""
         self._buckets = DynamicArray()
         for times in range(self._capacity):
             self._buckets.append(None)
         self._size = 0
 
     def get_keys_and_values(self) -> DynamicArray:
-        """Return a DynmaicArray of all keys and values in the hash table"""
+        """Return a DynmaicArray of all keys and values in the hash table.  O(N) time complexity"""
         da = DynamicArray()
         if self._size == 0:
             return da
