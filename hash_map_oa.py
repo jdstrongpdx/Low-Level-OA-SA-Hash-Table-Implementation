@@ -90,14 +90,10 @@ class HashMap:
         load_factor = self.table_load()
         if load_factor >= 0.5:
             self.resize_table(self._capacity * 2)
-        self.add_key(HashEntry(key, value))
-
-    def add_key(self, hash_entry: HashEntry) -> None:
-        """Add a hash_entry object into the hash map using open addressing with quadratic probing for collision
-            resolution. If hash_entry.key is found, update the value."""
         flag = False
         counter = 0
-        hash = self._hash_function(hash_entry.key)
+        hash = self._hash_function(key)
+        hash_entry = HashEntry(key, value)
         while not flag:
             # get hashed index
             index = (hash + (counter ** 2)) % self._capacity
@@ -142,21 +138,23 @@ class HashMap:
         # check and get correct next capacity
         if new_capacity < self._size:
             return
-        if new_capacity < self._capacity:
-            new_capacity = int((self._size / 0.66) * 2)
+
         if not self._is_prime(new_capacity):
             new_capacity = self._next_prime(new_capacity)
 
-        # save current array and build a new one
-        old = self.get_keys_and_values()
+        # save and clear current array and build new one
+        old = self._buckets
         old_size = self._size
+        old_capacity = self._capacity
         self._capacity = new_capacity
         self.clear()
 
         # rehash all values from the old array into the new array
-        for index in range(old.length()):
+        for index in range(old_capacity):
             old_bucket = old[index]
-            self.add_key(HashEntry(old_bucket[0], old_bucket[1]))
+            if old_bucket:
+                if not old_bucket.is_tombstone:
+                    self.put(old_bucket.key, old_bucket.value)
 
         # check all values transferred properly
         if old_size != self._size:
