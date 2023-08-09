@@ -137,7 +137,6 @@ class HashMap:
     def resize_table(self, new_capacity: int) -> None:
         """If parameter new_capacity is less than 1 - do nothing.  Check if new_capacity is a prime number - if not
             increment to the next prime number. O(N) time complexity. TODO"""
-
         # if new_capacity is not less than 1, do nothing
         if new_capacity < 1:
             return
@@ -147,11 +146,10 @@ class HashMap:
             new_capacity = self._next_prime(new_capacity)
 
         # check that the load factor minimums are maintained
-        new_load_factor = self._size / new_capacity
-        if new_load_factor > 1:
-            while new_load_factor >= 0.73:
-                new_capacity = self._next_prime(new_capacity + 1)
-                new_load_factor = self._size / new_capacity
+        if new_capacity < self._capacity:
+            new_capacity = int((self._size / 0.7))
+        if not self._is_prime(new_capacity):
+            new_capacity = self._next_prime(new_capacity)
 
         # save current array and build a new one
         old = self.get_keys_and_values()
