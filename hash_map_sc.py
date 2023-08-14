@@ -9,7 +9,7 @@
 #               for find_mode.
 
 
-from a6_include import (DynamicArray, LinkedList, SLNode, LinkedListIterator, DynamicArrayException,
+from a6_include import (DynamicArray, LinkedList, DynamicArrayException,
                         hash_function_1, hash_function_2)
 
 
@@ -93,7 +93,8 @@ class HashMap:
 
     def put(self, key: str, value: object) -> None:
         """Add parameter key/value pair to the hash map using chaining for collision resolution.  If key exists in the
-            hash table, update the value for the key.  Double the hash map capacity if the load factor is >= 1."""
+            hash table, update the value for the key.  Double the hash map capacity if the load factor is >= 1.
+            Indirect recursion with resize_table method for correct sizing and indexing."""
         # resize the DynamicArray if the table load is >= 1
         if self.table_load() >= 1:
             self.resize_table(self._capacity * 2)
@@ -132,15 +133,17 @@ class HashMap:
         return self._size / self._capacity
 
     def clear(self) -> None:
-        """Clear all key/value pairs from the hash table.  O(N) time complexity"""
+        """Clear all key/value pairs from the hash table by deleting the current array and replacing it with an empty
+            one of equal capacity.  O(N) time complexity"""
         self._buckets = DynamicArray()
         for index in range(self._capacity):
             self._buckets.append(LinkedList())
         self._size = 0
 
     def resize_table(self, new_capacity: int) -> None:
-        """If parameter new_capacity is less than 1 - do nothing.  Check if new_capacity is a prime number - if not
-            increment to the next prime number. O(N) time complexity. TODO"""
+        """If parameter new_capacity is less than 1: do nothing.  Check if new_capacity is a prime number - if not
+            increment to the next prime number. Indirect recursion with put method for correct sizing and indexing.
+            O(N) time complexity."""
         # if new_capacity is not less than 1, do nothing
         if new_capacity < 1:
             return
@@ -149,7 +152,8 @@ class HashMap:
         if not self._is_prime(new_capacity):
             new_capacity = self._next_prime(new_capacity)
 
-        # save current array and build a new one
+        # save and clear current array and build new one.  Uses get_keys_and_values because it has same time complexity
+        # but smaller memory requirements than copying existing array
         old = self.get_keys_and_values()
         self._capacity = new_capacity
         old_size = self._size
@@ -202,9 +206,6 @@ class HashMap:
     def get_keys_and_values(self) -> DynamicArray:
         """Return a DynamicArray of all key/value pairs in the hash map"""
         da = DynamicArray()
-
-        if self._size == 0:
-            return da
         for index in range(self._capacity):
             bucket = self._buckets[index]
             if bucket.length():

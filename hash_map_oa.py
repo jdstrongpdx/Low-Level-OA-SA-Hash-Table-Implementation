@@ -88,7 +88,8 @@ class HashMap:
     # ------------------------------------------------------------------ #
 
     def put(self, key: str, value: object) -> None:
-        """Add a key/value pair to the hast map, doubling the capacity if the load factor is >= 0.5"""
+        """Add a key/value pair to the hast map, doubling the capacity if the load factor is >= 0.5.
+            Indirect recursion with resize_table method for correct sizing and indexing."""
         # double the size of the array if the load factor >= 0.5.  Indirect recursion of put -> resize -> put
         load_factor = self.table_load()
         if load_factor >= 0.5:
@@ -130,17 +131,13 @@ class HashMap:
         return self._size / self._capacity
 
     def empty_buckets(self) -> int:
-        """Return the number of empty buckets in the hash table DynamicArray.  O(N) time complexity"""
-        count = 0
-        for index in range(self._capacity):
-            bucket = self._buckets[index]
-            if not bucket or bucket.is_tombstone:
-                count += 1
-        return count
+        """Return the number of empty buckets in the hash table DynamicArray.  O(1) time complexity"""
+        return self._capacity - self._size
 
     def resize_table(self, new_capacity: int) -> None:
         """If parameter new_capacity is less than current size - do nothing.  Check if new_capacity is a prime number -
-            if not increment to the next prime number. O(N) time complexity."""
+            if not increment to the next prime number. Indirect recursion with put method for correct sizing and
+            indexing.  O(N) time complexity."""
         # check and get correct next capacity
         if new_capacity < self._size:
             return
@@ -149,38 +146,36 @@ class HashMap:
         if not self._is_prime(new_capacity):
             new_capacity = self._next_prime(new_capacity)
 
-        # save and clear current array and build new one
-        old = self._buckets
+        # save and clear current array and build new one.  Uses get_keys_and_values because it has same time complexity
+        # but smaller memory requirements than copying existing array
+        old = self.get_keys_and_values()
         old_size = self._size
-        old_capacity = self._capacity
         self._capacity = new_capacity
         self.clear()
 
         # rehash all values from the old array into the new array
-        for index in range(old_capacity):
+        for index in range(old.length()):
             old_bucket = old[index]
-            if old_bucket:
-                if not old_bucket.is_tombstone:
-                    self.put(old_bucket.key, old_bucket.value)
+            self.put(old_bucket[0], old_bucket[1])
 
         # check all values transferred properly
         if old_size != self._size:
             raise DynamicArrayException("Resize_table values not transferred correctly")
 
     def get(self, key: str) -> object:
-        """Return the value of parameter key if found, else None."""
+        """Return the value of parameter key if found, else None.  Best case O(1)"""
         bucket = self.find_key(key)
         if bucket:
             return bucket.value
 
     def contains_key(self, key: str) -> bool:
-        """Return True if the hash map contains the parameter key, else False"""
+        """Return True if the hash map contains the parameter key, else False. Best case O(1)"""
         bucket = self.find_key(key)
         return True if bucket else False
 
     def remove(self, key: str) -> None:
         """Remove the first key/value pair found with the parameter key in the hash table, else
-            return None"""
+            return None. Best case O(1)"""
         bucket = self.find_key(key)
         if bucket:
             bucket.is_tombstone = True
@@ -188,10 +183,10 @@ class HashMap:
 
     def find_key(self, key) -> object:
         """Return a hash_entry object if the parameter key is found in the hash map, else return None.
-            Helper method used by get, contains_key, and remove methods. O(1) best case time complexity"""
+            Helper method used by get, contains_key, and remove methods. Best case O(1)"""
         counter = 0
         hash = self._hash_function(key)
-        # search from the current hash index until the next empty space
+        # search from the current hash index until the next empty bucket - if not found in that span, key is not found
         bucket = 1
         while bucket:
             index = (hash + (counter ** 2)) % self._capacity
@@ -205,7 +200,8 @@ class HashMap:
         return
 
     def clear(self) -> None:
-        """Clear all data from the hash table. O(N) time complexity to build 'empty' array"""
+        """Clear all key/value pairs from the hash table by deleting the current array and replacing it with an empty
+            one of equal capacity.  O(N) time complexity"""
         self._buckets = DynamicArray()
         for times in range(self._capacity):
             self._buckets.append(None)
